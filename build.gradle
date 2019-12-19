@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+}
+
+group 'ru.pk'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail
+    compile group: 'com.sun.mail', name: 'jakarta.mail', version: '1.6.4'
+
+}
+
+version = '1.0.0'
+
+//sourceSets {
+//    main {
+//        resources {
+//            srcDirs "src/main/resources", "src/main/java"
+//        }
+//    }
+//}
+
+sourceSets {
+    main {
+        output.resourcesDir = "build/classes/java/main"
+    }
+    /*test {
+        output.resourcesDir = "build/classes/test"
+    }*/
+}
+
+//jar {
+//    baseName = 'analytics'
+//    from('src/main/java') {
+//        include 'config/**/*.xml'
+//    }
+//
+//    manifest {
+//        attributes 'Implementation-Title': 'Analytics Library', 'Implementation-Version': version
+//    }
+//}
