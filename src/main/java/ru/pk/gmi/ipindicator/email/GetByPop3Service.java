@@ -1,18 +1,27 @@
 package ru.pk.gmi.ipindicator.email;
 
+import com.sun.mail.pop3.POP3Folder;
 import ru.pk.gmi.TypeUtils;
 import ru.pk.gmi.exceptions.ApplicationException;
 import ru.pk.gmi.exceptions.ConnectPropertiesValidationException;
+import ru.pk.gmi.ipindicator.objects.MessageObject;
 
+import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.UIDFolder;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Properties;
 
 class GetByPop3Service {
+    private static Collection<String> uids = new HashSet<>();
+    private static final int UIDS_TIME_TO_LIVE_MINUTES = 5;
+
     private interface POP3_PROPERTIES {
         String POP3_HOST = "mail.pop3.host";
         String POP3_PORT = "mail.pop3.port";
@@ -23,9 +32,10 @@ class GetByPop3Service {
     private interface POP3_GLOBALS {
         String STORE = "pop3";
         String INBOX_FOLDER = "INBOX";
+        boolean NEED_TO_EXPUNGE = false;
     }
 
-    public Message[] getUnreadMessages(Properties applicationProps) {
+    public MessageObject[] getUnreadMessages(Properties applicationProps) {
         Properties properties = buildConnectProperties(applicationProps);
 
         String user = properties.getProperty(POP3_PROPERTIES.USERNAME);
@@ -43,14 +53,20 @@ class GetByPop3Service {
             Store store = emailSession.getStore(POP3_GLOBALS.STORE);
             store.connect(user, password);
 
-            Folder emailFolder = store.getFolder(POP3_GLOBALS.INBOX_FOLDER);
+            POP3Folder emailFolder = (POP3Folder) store.getFolder(POP3_GLOBALS.INBOX_FOLDER);
             emailFolder.open(Folder.READ_ONLY);
+            FetchProfile fetchProfile = new FetchProfile();
+            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+            Message[] messages = emailFolder.getMessages();
+            emailFolder.fetch(messages, fetchProfile);
 
+/*
             int count = emailFolder.getNewMessageCount();
             if (count == 0) {
                 return new Message[0];
             }
             Message[] messages = emailFolder.getMessages(1, count);
+*/
             System.out.println("messages.length---" + messages.length);
 
 /*
@@ -65,7 +81,7 @@ class GetByPop3Service {
             }
 */
 
-                emailFolder.close(false);
+                emailFolder.close(POP3_GLOBALS.NEED_TO_EXPUNGE);
                 store.close();
 
                 return messages;

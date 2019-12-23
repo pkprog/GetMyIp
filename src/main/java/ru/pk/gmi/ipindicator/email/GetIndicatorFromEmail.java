@@ -4,6 +4,7 @@ import ru.pk.gmi.AppPropertiesLoader;
 import ru.pk.gmi.TypeUtils;
 import ru.pk.gmi.exceptions.ApplicationException;
 import ru.pk.gmi.ipindicator.IpIndicatorFetch;
+import ru.pk.gmi.ipindicator.objects.MessageObject;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -26,7 +27,7 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
         boolean isUsePop3 = applicationProperties.getProperty(PROTOCOL_TYPE_POP3, "false").equalsIgnoreCase("true");
         boolean isUseImap = applicationProperties.getProperty(PROTOCOL_TYPE_IMAP, "false").equalsIgnoreCase("true");
 
-        Collection<Message> messages = new LinkedList<>();
+        Collection<MessageObject> messages = new LinkedList<>();
         if (isUsePop3) {
             GetByPop3Service service = new GetByPop3Service();
             messages.addAll(Arrays.asList(service.getUnreadMessages(applicationProperties)));
@@ -39,7 +40,7 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
         Collection<String> keywords = new HashSet<>();
         keywords.add(applicationProperties.getProperty(SUBJECT_KEYWORD));
 
-        for (Message m: messages) {
+        for (MessageObject m: messages) {
             try {
                 if (containsIgnoreCase(keywords, m.getSubject())) {
                     return true;

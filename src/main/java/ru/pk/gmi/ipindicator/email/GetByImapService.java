@@ -1,5 +1,7 @@
 package ru.pk.gmi.ipindicator.email;
 
+import ru.pk.gmi.ipindicator.objects.MessageObject;
+
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -11,8 +13,8 @@ import java.util.Properties;
 
 public class GetByImapService {
 
-    public Message[] getUnreadMessages(Properties applicationProps) {
-        return new Message[0];
+    public MessageObject[] getUnreadMessages(Properties applicationProps) {
+        return new MessageObject[0];
     }
 
     public static void check(String folderName, String user, String password) {
