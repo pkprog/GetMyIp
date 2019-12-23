@@ -2,13 +2,9 @@ package ru.pk.gmi.ipindicator.email;
 
 import ru.pk.gmi.AppPropertiesLoader;
 import ru.pk.gmi.TypeUtils;
-import ru.pk.gmi.exceptions.ApplicationException;
 import ru.pk.gmi.ipindicator.IpIndicatorFetch;
 import ru.pk.gmi.ipindicator.objects.MessageObject;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -30,23 +26,19 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
         Collection<MessageObject> messages = new LinkedList<>();
         if (isUsePop3) {
             GetByPop3Service service = new GetByPop3Service();
-            messages.addAll(Arrays.asList(service.getUnreadMessages(applicationProperties)));
+            messages.addAll(service.getUnreadMessages(applicationProperties));
         }
         if (isUseImap) {
             GetByImapService service = new GetByImapService();
-            messages.addAll(Arrays.asList(service.getUnreadMessages(applicationProperties)));
+            messages.addAll(service.getUnreadMessages(applicationProperties));
         }
 
         Collection<String> keywords = new HashSet<>();
         keywords.add(applicationProperties.getProperty(SUBJECT_KEYWORD));
 
         for (MessageObject m: messages) {
-            try {
-                if (containsIgnoreCase(keywords, m.getSubject())) {
-                    return true;
-                }
-            } catch (MessagingException e) {
-                throw new ApplicationException("Can not read SUBJECT:" + e.getMessage(), e);
+            if (containsIgnoreCase(keywords, m.getSubject())) {
+                return true;
             }
         }
 

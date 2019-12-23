@@ -4,6 +4,7 @@ import com.sun.mail.pop3.POP3Folder;
 import ru.pk.gmi.TypeUtils;
 import ru.pk.gmi.exceptions.ApplicationException;
 import ru.pk.gmi.exceptions.ConnectPropertiesValidationException;
+import ru.pk.gmi.ipindicator.email.filters.FetchEmailsFilter;
 import ru.pk.gmi.ipindicator.objects.MessageObject;
 
 import javax.mail.FetchProfile;
@@ -35,12 +36,14 @@ class GetByPop3Service {
         boolean NEED_TO_EXPUNGE = false;
     }
 
-    public MessageObject[] getUnreadMessages(Properties applicationProps) {
+    public Collection<MessageObject> getUnreadMessages(Properties applicationProps, FetchEmailsFilter filter) {
         Properties properties = buildConnectProperties(applicationProps);
 
         String user = properties.getProperty(POP3_PROPERTIES.USERNAME);
         String password = properties.getProperty(POP3_PROPERTIES.PASSWORD);
 
+        Store store = null;
+        POP3Folder emailFolder = null;
         try {
 //            properties.setProperty("mail.pop3.starttls.enable", "true");
 //            properties.setProperty("mail.pop3.starttls.required", "true");
@@ -50,10 +53,10 @@ class GetByPop3Service {
             Session emailSession = Session.getDefaultInstance(properties);
 
             //create the POP3 store object and connect with the pop server
-            Store store = emailSession.getStore(POP3_GLOBALS.STORE);
+            store = emailSession.getStore(POP3_GLOBALS.STORE);
             store.connect(user, password);
 
-            POP3Folder emailFolder = (POP3Folder) store.getFolder(POP3_GLOBALS.INBOX_FOLDER);
+            emailFolder = (POP3Folder) store.getFolder(POP3_GLOBALS.INBOX_FOLDER);
             emailFolder.open(Folder.READ_ONLY);
             FetchProfile fetchProfile = new FetchProfile();
             fetchProfile.add(UIDFolder.FetchProfileItem.UID);
@@ -81,16 +84,37 @@ class GetByPop3Service {
             }
 */
 
-                emailFolder.close(POP3_GLOBALS.NEED_TO_EXPUNGE);
-                store.close();
+            FetchProfile fpBody = new FetchProfile();
+            fpBody.add(UIDFolder.FetchProfileItem.CONTENT_INFO);
 
-                return messages;
+            //фильтр
+            emailFolder.fetch(messages, fpBody);
+
+            Collection<MessageObject> result = new HashSet<>();
+            for (Message m: messages) {
+                emailFolder.fetch(messages, fetchProfile);
+                result.add(new MessageObject(m.getSubject()));
+            }
+
+            return result;
         } catch (NoSuchProviderException e) {
             e.printStackTrace();
             throw new ApplicationException("Error connecting to server: " + e.getMessage(), e);
         } catch (MessagingException e) {
             e.printStackTrace();
             throw new ApplicationException("Error connecting to server: " + e.getMessage(), e);
+        } finally {
+            if (store != null) {
+                try {
+                    if (emailFolder != null) {
+                        emailFolder.close(POP3_GLOBALS.NEED_TO_EXPUNGE);
+                    }
+                    store.close();
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                    throw new ApplicationException("Error closing foder or store: " + e.getMessage(), e);
+                }
+            }
         }
     }
 

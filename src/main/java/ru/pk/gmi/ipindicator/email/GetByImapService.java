@@ -9,12 +9,14 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
 import java.security.Security;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Properties;
 
 public class GetByImapService {
 
-    public MessageObject[] getUnreadMessages(Properties applicationProps) {
-        return new MessageObject[0];
+    public Collection<MessageObject> getUnreadMessages(Properties applicationProps) {
+        return Collections.emptyList();
     }
 
     public static void check(String folderName, String user, String password) {
