@@ -1,32 +1,28 @@
 package ru.pk.gmi.ipindicator.email;
 
 import com.sun.mail.pop3.POP3Folder;
-import ru.pk.gmi.TypeUtils;
+import ru.pk.gmi.utils.TypeUtils;
 import ru.pk.gmi.exceptions.ApplicationException;
 import ru.pk.gmi.exceptions.ConnectPropertiesValidationException;
 import ru.pk.gmi.ipindicator.email.filters.FetchEmailsFilter;
 import ru.pk.gmi.ipindicator.objects.MessageObject;
 
-import javax.mail.FetchProfile;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.UIDFolder;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Properties;
+import javax.mail.*;
+import java.util.*;
 
 class GetByPop3Service {
-    private static Collection<String> uids = new HashSet<>();
+    //Connection+application properties
+    private Properties properties;
+
+    private Map<String, Date> history;
+    private TypeSaveHistory typeSaveHistory;
     private static final int UIDS_TIME_TO_LIVE_MINUTES = 5;
+    private static final int UIDS_MAX_COUNT = 2;
 
     private interface POP3_PROPERTIES {
-        String POP3_HOST = "mail.pop3.host";
-        String POP3_PORT = "mail.pop3.port";
-        String SSL_ENABLED = "mail.pop3.ssl.enable";
+        String POP3_HOST = "mail.receive.pop3.host";
+        String POP3_PORT = "mail.receive.pop3.port";
+        String SSL_ENABLED = "mail.receive.pop3.ssl.enable";
         String USERNAME = "mail.username";
         String PASSWORD = "mail.password";
     }
@@ -36,21 +32,35 @@ class GetByPop3Service {
         boolean NEED_TO_EXPUNGE = false;
     }
 
-    public Collection<MessageObject> getUnreadMessages(Properties applicationProps, FetchEmailsFilter filter) {
-        Properties properties = buildConnectProperties(applicationProps);
+    public enum TypeSaveHistory {
+        BY_COUNT,// фильтр истории просмотренных писем по числу последних
+        BY_SENT_DATE //фильтр истории по дате отправки
+    }
 
-        String user = properties.getProperty(POP3_PROPERTIES.USERNAME);
-        String password = properties.getProperty(POP3_PROPERTIES.PASSWORD);
+    public GetByPop3Service(TypeSaveHistory type, Properties applicationProps) {
+        this.typeSaveHistory = type;
+        this.history = new HashMap<>();
+        //
+        this.properties = buildConnectProperties(applicationProps);
+    }
+
+    public Collection<MessageObject> getUnreadMessages() {
+        String user = this.properties.getProperty(POP3_PROPERTIES.USERNAME);
+        String password = this.properties.getProperty(POP3_PROPERTIES.PASSWORD);
 
         Store store = null;
         POP3Folder emailFolder = null;
         try {
 //            properties.setProperty("mail.pop3.starttls.enable", "true");
 //            properties.setProperty("mail.pop3.starttls.required", "true");
-//            properties.put("mail.smtp.socketFactory.port", properties.getProperty(POP3_PROPERTIES.POP3_PORT));
-//            properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 
-            Session emailSession = Session.getDefaultInstance(properties);
+            Authenticator auth = new Authenticator() {
+                //override the getPasswordAuthentication method
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(user, password);
+                }
+            };
+            Session emailSession = Session.getDefaultInstance(this.properties);
 
             //create the POP3 store object and connect with the pop server
             store = emailSession.getStore(POP3_GLOBALS.STORE);
@@ -63,32 +73,18 @@ class GetByPop3Service {
             Message[] messages = emailFolder.getMessages();
             emailFolder.fetch(messages, fetchProfile);
 
-/*
-            int count = emailFolder.getNewMessageCount();
-            if (count == 0) {
-                return new Message[0];
-            }
-            Message[] messages = emailFolder.getMessages(1, count);
-*/
-            System.out.println("messages.length---" + messages.length);
-
-/*
-            for (int i = 0, n = messages.length; i < n; i++) {
-                Message message = messages[i];
-                System.out.println("---------------------------------");
-                System.out.println("Email Number " + (i + 1));
-                System.out.println("Subject: " + message.getSubject());
-                System.out.println("From: " + message.getFrom()[0]);
-                System.out.println("Text: " + message.getContent().toString());
-
-            }
-*/
-
-            FetchProfile fpBody = new FetchProfile();
-            fpBody.add(UIDFolder.FetchProfileItem.CONTENT_INFO);
-
             //фильтр
-            emailFolder.fetch(messages, fpBody);
+            Collection<Message> filtered = new LinkedList<>();
+            for (Message m: messages) {
+                if (getFilter().test(m)) {
+                    filtered.add(m);
+                    toHistory(m);
+                }
+            }
+
+//            FetchProfile fpBody = new FetchProfile();
+//            fpBody.add(UIDFolder.FetchProfileItem.CONTENT_INFO);
+//            emailFolder.fetch(filtered.toArray(new Message[]{}), fpBody);
 
             Collection<MessageObject> result = new HashSet<>();
             for (Message m: messages) {
@@ -148,6 +144,55 @@ class GetByPop3Service {
         properties.put(POP3_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
 
         return properties;
+    }
+
+    private FetchEmailsFilter getFilter() {
+        if (TypeSaveHistory.BY_COUNT.equals(this.typeSaveHistory) || TypeSaveHistory.BY_SENT_DATE.equals(this.typeSaveHistory)) {
+            return (m) -> {
+                final POP3Folder folder = (POP3Folder) m.getFolder();
+                final String uid = folder.getUID(m);
+                if (this.history.containsKey(uid)) return false;
+                return true;
+            };
+        }
+        return (m) -> {return false;};
+    }
+
+    private synchronized void toHistory(Message m) throws MessagingException {
+        final POP3Folder folder = (POP3Folder) m.getFolder();
+        final String uid = folder.getUID(m);
+        final Date date = m.getSentDate();
+        this.history.put(uid, date);
+        List<String> sortedUids = new ArrayList<>(this.history.keySet());
+        sortedUids.sort((s1, s2) -> {
+            Date d1 = this.history.get(s1);
+            Date d2 = this.history.get(s2);
+            if (d1 == null) return -1;
+            if (d2 == null) return 1;
+            return d2.compareTo(d1); //По убыванию
+        });
+
+        if (TypeSaveHistory.BY_COUNT.equals(this.typeSaveHistory)) {
+            int i = 0;
+            Iterator<String> it = sortedUids.iterator();
+            while (it.hasNext()) {
+                if (i >= UIDS_MAX_COUNT) {
+                    this.history.remove(it.next());
+                }
+                i++;
+            }
+        } else if (TypeSaveHistory.BY_SENT_DATE.equals(this.typeSaveHistory)) {
+            final Date limitDate = new Date(System.currentTimeMillis() - UIDS_TIME_TO_LIVE_MINUTES * 60 * 1000);
+            Iterator<String> it = sortedUids.iterator();
+            while (it.hasNext()) {
+                String testUid = it.next();
+                Date d = this.history.get(testUid);
+                if (limitDate.compareTo(d) > 0) {
+                    this.history.remove(testUid);
+                }
+            }
+        }
+
     }
 
 }

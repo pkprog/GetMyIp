@@ -1,4 +1,4 @@
-package ru.pk.gmi;
+package ru.pk.gmi.utils;
 
 public class TypeUtils {
     public static boolean isEmpty(String text) {

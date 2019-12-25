@@ -15,7 +15,7 @@ import java.util.Properties;
 
 public class GetByImapService {
 
-    public Collection<MessageObject> getUnreadMessages(Properties applicationProps) {
+    public Collection<MessageObject> getUnreadMessages() {
         return Collections.emptyList();
     }
 

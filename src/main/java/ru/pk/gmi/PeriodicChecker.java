@@ -15,7 +15,7 @@ public class PeriodicChecker {
             if (ipIndicatorFetch.fetch()) {
                 IpResultSenderFactory factorySetter = new IpResultSenderFactory();
                 IpResultSend ipResultSend = factorySetter.getSender(IpResultSenderFactory.TAG_SEND_EMAIL);
-                ipResultSend.send();
+                ipResultSend.send("ip:...", "");
             }
 
             /*try {
