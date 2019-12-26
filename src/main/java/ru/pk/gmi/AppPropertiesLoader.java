@@ -12,25 +12,36 @@ import java.net.URL;
 import java.util.Properties;
 
 public class AppPropertiesLoader {
-    public static final String FILE = "application.properties";
-    public static String pathToFolderOfFile;
+    public static final String DEFAULT_FILE = "application.properties";
+    public static String pathToFolderWithFile;
 
-    public static void init(String pathToFolderOfFile) {
-        AppPropertiesLoader.pathToFolderOfFile = pathToFolderOfFile;
+    public static void init(String pathToFolderWithFile) {
+        AppPropertiesLoader.pathToFolderWithFile = pathToFolderWithFile;
     }
 
     public static Properties load() {
-        String pathFile = TypeUtils.notEmpty(pathToFolderOfFile) ?
-                (pathToFolderOfFile + "/" + FILE) : (FILE);
         try {
-            return loadFromFile(pathFile);
+            if (TypeUtils.notEmpty(pathToFolderWithFile)) {
+                return loadFromFile(pathToFolderWithFile);
+            } else {
+                return loadFromResource(DEFAULT_FILE);
+            }
         } catch (URISyntaxException |IOException e) {
             e.printStackTrace();
             throw new ApplicationException("Can not load properties from local file:" + e.getMessage(), e);
         }
     }
 
-    private static Properties loadFromFile(String filePath) throws IOException, URISyntaxException {
+    private static Properties loadFromFile(String filePath) throws IOException {
+        File file = new File(filePath);
+        try (FileInputStream fis = new FileInputStream(file)) {
+            Properties props = new Properties();
+            props.load(fis);
+            return props;
+        }
+    }
+
+    private static Properties loadFromResource(String filePath) throws IOException, URISyntaxException {
         URL url = AppPropertiesLoader.class.getClassLoader().getResource(filePath);
         if (url == null) {
             throw new ApplicationException("Not found file-resource:" + filePath);
