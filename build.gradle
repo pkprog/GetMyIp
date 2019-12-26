@@ -47,3 +47,10 @@ sourceSets {
 //        attributes 'Implementation-Title': 'Analytics Library', 'Implementation-Version': version
 //    }
 //}
+
+task copyToLib(type: Copy) {
+    into "${buildDir}/out/actifacts"
+    from configurations.runtime
+}
+
+build.dependsOn(copyToLib)
