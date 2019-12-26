@@ -10,6 +10,9 @@ import ru.pk.gmi.utils.TypeUtils;
 import javax.mail.*;
 import java.util.*;
 
+/**
+ * Фильтруются только письма, высланные сегодня (без учета времени. Только дата)
+ */
 class GetByPop3Service {
     //Connection+application properties
     private Properties properties;
@@ -18,6 +21,8 @@ class GetByPop3Service {
     private TypeSaveHistory typeSaveHistory;
     private static final int UIDS_TIME_TO_LIVE_MINUTES = 5;
     private static final int UIDS_MAX_COUNT = 1000;
+
+    private static final int MAX_LOAD_MESSAGES = 200;
 
     private interface POP3_PROPERTIES {
         String POP3_HOST = "mail.pop3.host";
@@ -74,10 +79,8 @@ class GetByPop3Service {
 
             emailFolder = (POP3Folder) store.getFolder(POP3_GLOBALS.INBOX_FOLDER);
             emailFolder.open(Folder.READ_ONLY);
-            FetchProfile fetchProfile = new FetchProfile();
-            fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-            Message[] messages = emailFolder.getMessages();
-            emailFolder.fetch(messages, fetchProfile);
+
+            Collection<Message> messages = fetchMessages(emailFolder);
 
             //фильтр
             Collection<Message> filtered = new LinkedList<>();
@@ -96,7 +99,6 @@ class GetByPop3Service {
 
             Collection<MessageObject> result = new HashSet<>();
             for (Message m: filtered) {
-                //emailFolder.fetch(messages, fetchProfile);
                 result.add(new MessageObject(m.getSubject()));
             }
 
@@ -120,6 +122,24 @@ class GetByPop3Service {
                 }
             }
         }
+    }
+
+    private Collection<Message> fetchMessages(POP3Folder emailFolder) throws MessagingException {
+        FetchProfile fetchProfile = new FetchProfile();
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+
+        final int maxCount = Math.min(emailFolder.getMessageCount(), MAX_LOAD_MESSAGES);
+        Collection<Message> messages = new LinkedList<>();
+        for (int i = 1; i <= maxCount; i++) {
+            try {
+                messages.add(emailFolder.getMessage(i));
+            } catch (IndexOutOfBoundsException e) {
+                break;
+            }
+        }
+        Message[] messagesArray = messages.toArray(new Message[]{});
+        emailFolder.fetch(messagesArray, fetchProfile);
+        return messages;
     }
 
     private Properties buildConnectProperties(Properties applicationProps) {
@@ -160,7 +180,7 @@ class GetByPop3Service {
                 final POP3Folder folder = (POP3Folder) m.getFolder();
                 final String uid = folder.getUID(m);
                 if (this.history.containsKey(uid)) return false;
-                if (TypeUtils.compareDay(new Date(), m.getSentDate()) >= 0) return false; //Прислано сегодня. Поле received пустое
+                if (TypeUtils.compareDay(new Date(), m.getSentDate()) == 0) return true; //Прислано сегодня. Поле received пустое
                 return true;
             };
         }
