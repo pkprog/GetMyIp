@@ -17,7 +17,7 @@ class GetByPop3Service {
     private Map<String, Date> history;
     private TypeSaveHistory typeSaveHistory;
     private static final int UIDS_TIME_TO_LIVE_MINUTES = 5;
-    private static final int UIDS_MAX_COUNT = 2;
+    private static final int UIDS_MAX_COUNT = 1000;
 
     private interface POP3_PROPERTIES {
         String POP3_HOST = "mail.pop3.host";
@@ -85,6 +85,8 @@ class GetByPop3Service {
                 if (getFilter().test(m)) {
                     filtered.add(m);
                     toHistory(m);
+                } else {
+                    cleanHistory();
                 }
             }
 
@@ -93,8 +95,8 @@ class GetByPop3Service {
 //            emailFolder.fetch(filtered.toArray(new Message[]{}), fpBody);
 
             Collection<MessageObject> result = new HashSet<>();
-            for (Message m: messages) {
-                emailFolder.fetch(messages, fetchProfile);
+            for (Message m: filtered) {
+                //emailFolder.fetch(messages, fetchProfile);
                 result.add(new MessageObject(m.getSubject()));
             }
 
@@ -158,7 +160,7 @@ class GetByPop3Service {
                 final POP3Folder folder = (POP3Folder) m.getFolder();
                 final String uid = folder.getUID(m);
                 if (this.history.containsKey(uid)) return false;
-                if (TypeUtils.compareDay(new Date(), m.getSentDate()) > 1) return false; //Прислано сегодня. Поле received пустое
+                if (TypeUtils.compareDay(new Date(), m.getSentDate()) >= 0) return false; //Прислано сегодня. Поле received пустое
                 return true;
             };
         }
@@ -170,6 +172,11 @@ class GetByPop3Service {
         final String uid = folder.getUID(m);
         final Date date = m.getSentDate();
         this.history.put(uid, date);
+
+        cleanHistory();
+    }
+
+    private synchronized void cleanHistory() {
         List<String> sortedUids = new ArrayList<>(this.history.keySet());
         sortedUids.sort((s1, s2) -> {
             Date d1 = this.history.get(s1);
@@ -200,7 +207,6 @@ class GetByPop3Service {
                 }
             }
         }
-
     }
 
 }
