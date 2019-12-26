@@ -1,11 +1,11 @@
 package ru.pk.gmi.ipindicator.email;
 
 import com.sun.mail.pop3.POP3Folder;
-import ru.pk.gmi.utils.TypeUtils;
 import ru.pk.gmi.exceptions.ApplicationException;
 import ru.pk.gmi.exceptions.ConnectPropertiesValidationException;
 import ru.pk.gmi.ipindicator.email.filters.FetchEmailsFilter;
 import ru.pk.gmi.ipindicator.objects.MessageObject;
+import ru.pk.gmi.utils.TypeUtils;
 
 import javax.mail.*;
 import java.util.*;
@@ -66,11 +66,11 @@ class GetByPop3Service {
                     return new PasswordAuthentication(user, password);
                 }
             };
-            Session emailSession = Session.getDefaultInstance(this.properties);
+            Session emailSession = Session.getInstance(this.properties, auth);
 
             //create the POP3 store object and connect with the pop server
             store = emailSession.getStore(POP3_GLOBALS.STORE);
-            store.connect(user, password);
+            store.connect(/*user, password*/);
 
             emailFolder = (POP3Folder) store.getFolder(POP3_GLOBALS.INBOX_FOLDER);
             emailFolder.open(Folder.READ_ONLY);
@@ -147,7 +147,7 @@ class GetByPop3Service {
         }
 
         boolean isUseSsl = applicationProps.getProperty(POP3_FILE_PROPERTIES.SSL_ENABLED, "false").equalsIgnoreCase("true");
-        properties.put(POP3_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
+        properties.setProperty(POP3_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
 
         return properties;
     }

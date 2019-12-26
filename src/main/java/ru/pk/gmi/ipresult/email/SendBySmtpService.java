@@ -45,21 +45,13 @@ class SendBySmtpService {
         final String fromEmail = properties.getProperty(SMTP_PROPERTIES.FROM_EMAIL); // can be your email id
         final String toEmail = properties.getProperty(SMTP_PROPERTIES.TO_EMAIL); // can be any email id
 
-        /*Properties props = new Properties();
-        props.put("mail.smtp.host", properties.getProperty(SMTP_PROPERTIES.SMTP_HOST)); //SMTP Host
-        props.put("mail.smtp.port", properties.getProperty(SMTP_PROPERTIES.SMTP_PORT)); //SMTP Port
-        props.put("mail.smtp.auth", properties.getProperty(SMTP_PROPERTIES.AUTH_ENABLED)); //Enabling SMTP Authentication
-        props.put("mail.smtp.socketFactory.port", properties.getProperty(SMTP_PROPERTIES.SSL_PORT)); //SSL Port
-        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); //SSL Factory Class*/
-
         Authenticator auth = new Authenticator() {
             //override the getPasswordAuthentication method
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(user, password);
             }
         };
-
-        Session session = Session.getDefaultInstance(this.properties, auth);
+        Session session = Session.getInstance(this.properties, auth);
         EmailUtil.sendEmail(session, fromEmail, toEmail,  subject, text);
 
 //        EmailUtil.sendAttachmentEmail(session, toEmail, "SSLEmail Testing Subject with Attachment", "SSLEmail Testing Body with Attachment");
@@ -102,8 +94,8 @@ class SendBySmtpService {
         //properties.put(SMTP_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
 
         if (isUseSsl) {
-            properties.put(SMTP_PROPERTIES.SSL_PORT, properties.getProperty(SMTP_FILE_PROPERTIES.SSL_PORT)); //SSL Port
-            properties.put(SMTP_PROPERTIES.SSL_CLASS, "javax.net.ssl.SSLSocketFactory"); //SSL Factory Class
+            properties.setProperty(SMTP_PROPERTIES.SSL_PORT, applicationProps.getProperty(SMTP_FILE_PROPERTIES.SSL_PORT)); //SSL Port
+            properties.setProperty(SMTP_PROPERTIES.SSL_CLASS, "javax.net.ssl.SSLSocketFactory"); //SSL Factory Class
         }
 
         return properties;
