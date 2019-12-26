@@ -24,8 +24,8 @@ public class EmailUtil {
 
             msg.setFrom(new InternetAddress(fromEmail, "GetMyIp ver 1.1"));
             msg.setReplyTo(InternetAddress.parse(fromEmail, false));
-            msg.setSubject(subject, "UTF-8");
-            msg.setText(body, "UTF-8");
+            msg.setSubject(subject == null ? "" : subject, "UTF-8");
+            msg.setText(body == null ? "" : body, "UTF-8");
             msg.setSentDate(new Date());
             msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
 
