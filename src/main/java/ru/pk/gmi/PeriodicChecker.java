@@ -13,12 +13,13 @@ import ru.pk.gmi.ipresult.IpResultSenderFactory;
 import java.util.Collection;
 
 public class PeriodicChecker {
-    private static int SLEEP_TIME = 60*1*1000;
+    private static int SLEEP_TIME = 60*1*1000; //60 sec
 
     public static void main(String[] params) {
-        //while (true) {
-            IpIndicatorFactory indicatorFactory = new IpIndicatorFactory();
-            IpIndicatorFetch ipIndicatorFetch = indicatorFactory.getFetcher(IpIndicatorFactory.TAG_FETCH_EMAIL);
+        IpIndicatorFactory indicatorFactory = new IpIndicatorFactory();
+        IpIndicatorFetch ipIndicatorFetch = indicatorFactory.getFetcher(IpIndicatorFactory.TAG_FETCH_EMAIL);
+
+        while (true) {
             if (ipIndicatorFetch.fetch()) {
                 IpAddressGetterFactory ipAddressGetterFactory = new IpAddressGetterFactory();
                 GetIpAddressService getIpAddressService = ipAddressGetterFactory.getService(IpAddressGetterFactory.TAG_GET_CURRENT);
@@ -36,12 +37,12 @@ public class PeriodicChecker {
                 ipResultSend.send(subject, text);
             }
 
-            /*try {
+            try {
                 Thread.sleep(SLEEP_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }*/
-        //}
+            }
+        }
     }
 
 

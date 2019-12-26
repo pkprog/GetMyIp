@@ -47,7 +47,7 @@ class IpForCurrentMachineService implements GetIpAddressService {
         for (Map.Entry<NetworkInterface, Collection<InetAddress>> ipMap: mapNiAddr.entrySet()) {
             if (ipMap.getValue() != null && ipMap.getValue().size() > 0) {
                 for (InetAddress ip: ipMap.getValue()) {
-                    result.add(new IpObject(new String(ip.getHostName()), null, ipMap.getKey().getName()));
+                    result.add(new IpObject(ip.getHostName(), null, ipMap.getKey().getName()));
                 }
             }
         }

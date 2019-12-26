@@ -14,7 +14,7 @@ public class EmailUtil {
     /**
      * Utility method to send simple HTML email
      */
-    public static void sendEmail(Session session, String fromEmail, String toEmail, String subject, String body){
+    public static void sendEmail(Session session, String fromEmail, String toEmail, String subject, String bodyHtml){
         try {
             MimeMessage msg = new MimeMessage(session);
             //set message headers
@@ -25,7 +25,7 @@ public class EmailUtil {
             msg.setFrom(new InternetAddress(fromEmail, "GetMyIp ver 1.1"));
             msg.setReplyTo(InternetAddress.parse(fromEmail, false));
             msg.setSubject(subject == null ? "" : subject, "UTF-8");
-            msg.setText(body == null ? "" : body, "UTF-8");
+            msg.setText(bodyHtml == null ? "" : bodyHtml, "UTF-8", "html");
             msg.setSentDate(new Date());
             msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
 

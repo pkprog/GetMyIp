@@ -158,6 +158,7 @@ class GetByPop3Service {
                 final POP3Folder folder = (POP3Folder) m.getFolder();
                 final String uid = folder.getUID(m);
                 if (this.history.containsKey(uid)) return false;
+                if (TypeUtils.compareDay(new Date(), m.getSentDate()) > 1) return false; //Прислано сегодня. Поле received пустое
                 return true;
             };
         }
@@ -182,8 +183,9 @@ class GetByPop3Service {
             int i = 0;
             Iterator<String> it = sortedUids.iterator();
             while (it.hasNext()) {
+                String testUid = it.next();
                 if (i >= UIDS_MAX_COUNT) {
-                    this.history.remove(it.next());
+                    this.history.remove(testUid);
                 }
                 i++;
             }
