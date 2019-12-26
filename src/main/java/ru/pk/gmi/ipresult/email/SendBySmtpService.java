@@ -13,6 +13,17 @@ class SendBySmtpService {
     private Properties properties;
 
     private interface SMTP_PROPERTIES {
+        String SMTP_HOST = "mail.smtp.host";
+        String SMTP_PORT = "mail.smtp.port";
+        String SSL_PORT = "mail.smtp.socketFactory.port";
+        String SSL_CLASS = "mail.smtp.socketFactory.class";
+        String AUTH_ENABLED = "mail.smtp.auth";
+        String USERNAME = "mail.username";
+        String PASSWORD = "mail.password";
+        String TO_EMAIL = "application.mail.send.toEmail";
+        String FROM_EMAIL = "application.mail.send.fromEmail";
+    }
+    private interface SMTP_FILE_PROPERTIES {
         String SMTP_HOST = "mail.send.smtp.host";
         String SMTP_PORT = "mail.send.smtp.port";
         String SSL_PORT = "mail.send.smtp.ssl.port";
@@ -58,13 +69,16 @@ class SendBySmtpService {
 
     private Properties buildConnectProperties(Properties applicationProps) {
         Properties properties = new Properties();
-        properties.setProperty(SMTP_PROPERTIES.USERNAME, applicationProps.getProperty(SMTP_PROPERTIES.USERNAME));
-        properties.setProperty(SMTP_PROPERTIES.PASSWORD, applicationProps.getProperty(SMTP_PROPERTIES.PASSWORD));
-        properties.setProperty(SMTP_PROPERTIES.SMTP_HOST, applicationProps.getProperty(SMTP_PROPERTIES.SMTP_HOST));
-        properties.setProperty(SMTP_PROPERTIES.SMTP_PORT, applicationProps.getProperty(SMTP_PROPERTIES.SMTP_PORT));
+        properties.setProperty(SMTP_PROPERTIES.USERNAME, applicationProps.getProperty(SMTP_FILE_PROPERTIES.USERNAME));
+        properties.setProperty(SMTP_PROPERTIES.PASSWORD, applicationProps.getProperty(SMTP_FILE_PROPERTIES.PASSWORD));
+        boolean isUseAuth = applicationProps.getProperty(SMTP_FILE_PROPERTIES.AUTH_ENABLED, "false").equalsIgnoreCase("true");
+        properties.setProperty(SMTP_PROPERTIES.AUTH_ENABLED, Boolean.toString(isUseAuth));
 
-        properties.setProperty(SMTP_PROPERTIES.FROM_EMAIL, applicationProps.getProperty(SMTP_PROPERTIES.FROM_EMAIL));
-        properties.setProperty(SMTP_PROPERTIES.TO_EMAIL, applicationProps.getProperty(SMTP_PROPERTIES.TO_EMAIL));
+        properties.setProperty(SMTP_PROPERTIES.SMTP_HOST, applicationProps.getProperty(SMTP_FILE_PROPERTIES.SMTP_HOST));
+        properties.setProperty(SMTP_PROPERTIES.SMTP_PORT, applicationProps.getProperty(SMTP_FILE_PROPERTIES.SMTP_PORT));
+
+        properties.setProperty(SMTP_PROPERTIES.FROM_EMAIL, applicationProps.getProperty(SMTP_FILE_PROPERTIES.FROM_EMAIL));
+        properties.setProperty(SMTP_PROPERTIES.TO_EMAIL, applicationProps.getProperty(SMTP_FILE_PROPERTIES.TO_EMAIL));
 
         String user = properties.getProperty(SMTP_PROPERTIES.USERNAME);
         String password = properties.getProperty(SMTP_PROPERTIES.PASSWORD);
@@ -84,12 +98,12 @@ class SendBySmtpService {
             throw new ConnectPropertiesValidationException("port is empty");
         }
 
-        boolean isUseSsl = applicationProps.getProperty(SMTP_PROPERTIES.SSL_ENABLED, "false").equalsIgnoreCase("true");
-        properties.put(SMTP_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
+        boolean isUseSsl = applicationProps.getProperty(SMTP_FILE_PROPERTIES.SSL_ENABLED, "false").equalsIgnoreCase("true");
+        //properties.put(SMTP_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
 
         if (isUseSsl) {
-            properties.put("mail.smtp.socketFactory.port", properties.getProperty(SMTP_PROPERTIES.SSL_PORT)); //SSL Port
-            properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); //SSL Factory Class
+            properties.put(SMTP_PROPERTIES.SSL_PORT, properties.getProperty(SMTP_FILE_PROPERTIES.SSL_PORT)); //SSL Port
+            properties.put(SMTP_PROPERTIES.SSL_CLASS, "javax.net.ssl.SSLSocketFactory"); //SSL Factory Class
         }
 
         return properties;

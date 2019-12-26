@@ -6,15 +6,17 @@ import ru.pk.gmi.ipresult.IpResultSend;
 import java.util.Properties;
 
 public class SendIpAddressToEmail implements IpResultSend {
-    private static final String PROTOCOL_TYPE_SMTP = "mail.send.protocol.smtp";
-    private static final String PROTOCOL_TYPE_IMAP = "mail.send.protocol.imap";
+    private interface FILE_PROPERTIES {
+        String PROTOCOL_TYPE_SMTP = "mail.send.protocol.smtp";
+        String PROTOCOL_TYPE_IMAP = "mail.send.protocol.imap";
+    }
 
     @Override
     public void send(String subject, String text) {
         Properties applicationProperties = AppPropertiesLoader.load();
 
-        boolean isUseSmtp = applicationProperties.getProperty(PROTOCOL_TYPE_SMTP, "false").equalsIgnoreCase("true");
-        boolean isUseImap = applicationProperties.getProperty(PROTOCOL_TYPE_IMAP, "false").equalsIgnoreCase("true");
+        boolean isUseSmtp = applicationProperties.getProperty(FILE_PROPERTIES.PROTOCOL_TYPE_SMTP, "false").equalsIgnoreCase("true");
+        boolean isUseImap = applicationProperties.getProperty(FILE_PROPERTIES.PROTOCOL_TYPE_IMAP, "false").equalsIgnoreCase("true");
 
         if (isUseSmtp) {
             SendBySmtpService service = getSendBySmtpService(applicationProperties);

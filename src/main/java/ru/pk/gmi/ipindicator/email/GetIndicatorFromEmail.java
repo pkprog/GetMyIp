@@ -1,9 +1,9 @@
 package ru.pk.gmi.ipindicator.email;
 
 import ru.pk.gmi.AppPropertiesLoader;
-import ru.pk.gmi.utils.TypeUtils;
 import ru.pk.gmi.ipindicator.IpIndicatorFetch;
 import ru.pk.gmi.ipindicator.objects.MessageObject;
+import ru.pk.gmi.utils.TypeUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,9 +12,11 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class GetIndicatorFromEmail implements IpIndicatorFetch {
-    private static final String PROTOCOL_TYPE_POP3 = "mail.receive.protocol.pop3";
-    private static final String PROTOCOL_TYPE_IMAP = "mail.receive.protocol.imap";
-    private static final String SUBJECT_KEYWORD = "mail.subject.keyword";
+    private interface FILE_PROPERTIES {
+        String PROTOCOL_TYPE_POP3 = "mail.receive.protocol.pop3";
+        String PROTOCOL_TYPE_IMAP = "mail.receive.protocol.imap";
+        String SUBJECT_KEYWORD = "mail.subject.keyword";
+    }
 
     private GetByPop3Service pop3Service = null;
     private GetByImapService imapService = null;
@@ -23,8 +25,8 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
     public boolean fetch() {
         Properties applicationProperties = AppPropertiesLoader.load();
 
-        boolean isUsePop3 = applicationProperties.getProperty(PROTOCOL_TYPE_POP3, "false").equalsIgnoreCase("true");
-        boolean isUseImap = applicationProperties.getProperty(PROTOCOL_TYPE_IMAP, "false").equalsIgnoreCase("true");
+        boolean isUsePop3 = applicationProperties.getProperty(FILE_PROPERTIES.PROTOCOL_TYPE_POP3, "false").equalsIgnoreCase("true");
+        boolean isUseImap = applicationProperties.getProperty(FILE_PROPERTIES.PROTOCOL_TYPE_IMAP, "false").equalsIgnoreCase("true");
 
         Collection<MessageObject> messages = new LinkedList<>();
         if (isUsePop3) {
@@ -37,7 +39,7 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
         }
 
         Collection<String> keywords = new HashSet<>();
-        keywords.add(applicationProperties.getProperty(SUBJECT_KEYWORD));
+        keywords.add(applicationProperties.getProperty(FILE_PROPERTIES.SUBJECT_KEYWORD));
 
         for (MessageObject m: messages) {
             if (containsIgnoreCase(keywords, m.getSubject())) {

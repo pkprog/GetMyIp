@@ -20,6 +20,13 @@ class GetByPop3Service {
     private static final int UIDS_MAX_COUNT = 2;
 
     private interface POP3_PROPERTIES {
+        String POP3_HOST = "mail.pop3.host";
+        String POP3_PORT = "mail.pop3.port";
+        String SSL_ENABLED = "mail.pop3.ssl.enable";
+        String USERNAME = "mail.username";
+        String PASSWORD = "mail.password";
+    }
+    private interface POP3_FILE_PROPERTIES {
         String POP3_HOST = "mail.receive.pop3.host";
         String POP3_PORT = "mail.receive.pop3.port";
         String SSL_ENABLED = "mail.receive.pop3.ssl.enable";
@@ -31,7 +38,6 @@ class GetByPop3Service {
         String INBOX_FOLDER = "INBOX";
         boolean NEED_TO_EXPUNGE = false;
     }
-
     public enum TypeSaveHistory {
         BY_COUNT,// фильтр истории просмотренных писем по числу последних
         BY_SENT_DATE //фильтр истории по дате отправки
@@ -117,10 +123,10 @@ class GetByPop3Service {
     private Properties buildConnectProperties(Properties applicationProps) {
 //        Properties properties = (Properties) applicationProps.clone();
         Properties properties = new Properties();
-        properties.setProperty(POP3_PROPERTIES.USERNAME, applicationProps.getProperty(POP3_PROPERTIES.USERNAME));
-        properties.setProperty(POP3_PROPERTIES.PASSWORD, applicationProps.getProperty(POP3_PROPERTIES.PASSWORD));
-        properties.setProperty(POP3_PROPERTIES.POP3_HOST, applicationProps.getProperty(POP3_PROPERTIES.POP3_HOST));
-        properties.setProperty(POP3_PROPERTIES.POP3_PORT, applicationProps.getProperty(POP3_PROPERTIES.POP3_PORT));
+        properties.setProperty(POP3_PROPERTIES.USERNAME, applicationProps.getProperty(POP3_FILE_PROPERTIES.USERNAME));
+        properties.setProperty(POP3_PROPERTIES.PASSWORD, applicationProps.getProperty(POP3_FILE_PROPERTIES.PASSWORD));
+        properties.setProperty(POP3_PROPERTIES.POP3_HOST, applicationProps.getProperty(POP3_FILE_PROPERTIES.POP3_HOST));
+        properties.setProperty(POP3_PROPERTIES.POP3_PORT, applicationProps.getProperty(POP3_FILE_PROPERTIES.POP3_PORT));
 
         String user = properties.getProperty(POP3_PROPERTIES.USERNAME);
         String password = properties.getProperty(POP3_PROPERTIES.PASSWORD);
@@ -140,7 +146,7 @@ class GetByPop3Service {
             throw new ConnectPropertiesValidationException("port is empty");
         }
 
-        boolean isUseSsl = applicationProps.getProperty(POP3_PROPERTIES.SSL_ENABLED, "false").equalsIgnoreCase("true");
+        boolean isUseSsl = applicationProps.getProperty(POP3_FILE_PROPERTIES.SSL_ENABLED, "false").equalsIgnoreCase("true");
         properties.put(POP3_PROPERTIES.SSL_ENABLED, Boolean.toString(isUseSsl));
 
         return properties;
