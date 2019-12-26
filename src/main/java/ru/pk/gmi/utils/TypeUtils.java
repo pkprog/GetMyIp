@@ -12,6 +12,9 @@ public class TypeUtils {
         return !isEmpty(text);
     }
 
+    public static String safeString(String text) {
+        return isEmpty(text) ? "" : text.trim();
+    }
 
     public static boolean isTrue(String text) {
         return "true".equalsIgnoreCase(text);

@@ -8,7 +8,6 @@ import ru.pk.gmi.utils.TypeUtils;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.Properties;
 
 public class GetIndicatorFromEmail implements IpIndicatorFetch {
@@ -39,10 +38,10 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
         }
 
         Collection<String> keywords = new HashSet<>();
-        keywords.add(applicationProperties.getProperty(FILE_PROPERTIES.SUBJECT_KEYWORD));
+        keywords.add(TypeUtils.safeString(applicationProperties.getProperty(FILE_PROPERTIES.SUBJECT_KEYWORD)));
 
         for (MessageObject m: messages) {
-            if (containsIgnoreCase(keywords, m.getSubject())) {
+            if (containsIgnoreCase(TypeUtils.safeString(m.getSubject()), keywords)) {
                 return true;
             }
         }
@@ -50,11 +49,15 @@ public class GetIndicatorFromEmail implements IpIndicatorFetch {
         return false;
     }
 
-    private boolean containsIgnoreCase(Collection<String> collection, String text) {
+    private boolean containsIgnoreCase(String text, Collection<String> collection) {
         if (TypeUtils.isEmpty(text)) return false;
 
-        Optional<String> result = collection.stream().filter(TypeUtils::notEmpty).filter(t -> t.equalsIgnoreCase(text)).findFirst();
-        return result.isPresent();
+        for (String k: collection) {
+            if (text.contains(k)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized GetByPop3Service getPop3Service(Properties applicationProperties) {
