@@ -10,5 +10,11 @@
 
 Скрипты для запуска как сервис Windows (тестировано на Win7) скрипты в папке runonwondows. 
 Информация для запуска в качестве сервиса в основном взята из источников: 
-1.https://habr.com/ru/sandbox/49165/
-2.https://social.msdn.microsoft.com/Forums/vstudio/en-US/28400ffa-f905-4b6b-97f7-2df1166849f9/error-1083-the-executable-program-that-this-service-is-configured-to-run-in-does-not-implement-the?forum=vcgeneral   (сообщение Wednesday, January 25, 2012 10:52 AM)
+<ul style="list-style-type: none;">
+  <li>
+https://habr.com/ru/sandbox/49165/
+  </li>
+  <li>
+https://social.msdn.microsoft.com/Forums/vstudio/en-US/28400ffa-f905-4b6b-97f7-2df1166849f9/error-1083-the-executable-program-that-this-service-is-configured-to-run-in-does-not-implement-the?forum=vcgeneral   (сообщение Wednesday, January 25, 2012 10:52 AM)
+  </li>
+</ul>
