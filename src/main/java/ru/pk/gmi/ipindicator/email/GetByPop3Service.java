@@ -180,7 +180,7 @@ class GetByPop3Service {
                 final POP3Folder folder = (POP3Folder) m.getFolder();
                 final String uid = folder.getUID(m);
                 if (this.history.containsKey(uid)) return false;
-                if (TypeUtils.compareDay(new Date(), m.getSentDate()) == 0) return true; //Прислано сегодня. Поле received пустое
+                if (TypeUtils.compareDay(new Date(), m.getSentDate()) != 0) return false; //Прислано сегодня. Поле received пустое
                 return true;
             };
         }

@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\GetMyIp]
+
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\GetMyIp\Parameters]
+"AppDirectory"="C:\\java\\jre1.8.0_131\\bin"
+"Application"="C:\\java\\jre1.8.0_131\\bin\\java.exe"
+"AppParameters"="-jar \"C:\\Users\\phizhnyakov\\IdeaProjects\\GetMyIp\\out\\artifacts\\GetMyIp.jar\" \"C:\\Users\\phizhnyakov\\IdeaProjects\\GetMyIp\\local\\application.properties.local\""

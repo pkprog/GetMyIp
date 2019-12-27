@@ -1,7 +1,7 @@
 ﻿/src/main/resources/application.properties.local
 /gradle/
-/.idea/
 /build/classes/java/main/
 /.gradle/
 /local/
 /out/
+/.idea/dictionaries/
