@@ -1,0 +1,9 @@
+Создал сервис через программу nssm
+
+nssm install GetMyIp
+nssm edit GetMyIp
+потом в окне параметры:
+Path: C:\java\jre1.8.0_131\bin\java.exe
+Startup directory: C:\java\jre1.8.0_131\bin
+Arguments: -jar "C:\Users\phizhnyakov\IdeaProjects\GetMyIp\out\artifacts\GetMyIp.jar" "C:\Users\phizhnyakov\IdeaProjects\GetMyIp\local\application.properties.local"
+IO: Output и Error stderr: C:\user_temp\GetMyIp\logs\1.log
